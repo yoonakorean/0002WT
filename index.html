@@ -69,7 +69,7 @@
   <audio id="audio" controls></audio><br>
   <input type="text" id="answer" placeholder="請輸入聽到的內容"><br>
   <div class="note">&nbsp;</div>
-  <div class="note" id="hint">請注意空格與標點符號</div>
+  <div class="note">&nbsp;</div>
   <button id="check-btn" disabled>確認</button>
   <div id="result"></div>
   <button id="next-btn" class="hidden">下一題</button>
@@ -153,7 +153,7 @@
       const userAns = answerInput.value.trim();
       const correctAns = shuffledQuestions[current].answer.trim();
       if (userAns === correctAns) {
-        resultDiv.innerHTML = "✅ 正確！";
+        resultDiv.innerHTML = "✅ 答對了🎉 你真棒👍🏻";
         correct++;
       } else {
         resultDiv.innerHTML = `❌ 錯誤。正確答案：${correctAns}`;

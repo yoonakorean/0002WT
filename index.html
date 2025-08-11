@@ -232,7 +232,27 @@
         String(now.getHours()).padStart(2, '0') + ":" +
         String(now.getMinutes()).padStart(2, '0') + ":" +
         String(now.getSeconds()).padStart(2, '0');
-      alert(`暱稱：${nickname}\n成績：${finalScore}%\n時間：${time}`);
+
+      const weekdayNames = ["日", "一", "二", "三", "四", "五", "六"];
+      const weekday = weekdayNames[now.getDay()];
+      const gameTitle = document.getElementById("game-title").textContent;
+
+      // Google 表單送出
+      const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSd8KhDu_lq6g4aPzkLaNYUUVG9P0E9cRT1R2WVDIkkfFh7WxA/formResponse";
+      const formData = new FormData();
+      formData.append("entry.1082970818", nickname);   // 暱稱
+      formData.append("entry.851626887", finalScore);  // 分數
+      formData.append("entry.498226528", time);        // 測驗時間
+      formData.append("entry.532888754", weekday);     // 星期
+      formData.append("entry.1110600272", gameTitle);  // 測驗名稱
+
+      fetch(formURL, { method: "POST", mode: "no-cors", body: formData })
+        .then(() => {
+          alert("✅ 提交成功!! 可重複測驗");
+        })
+        .catch(() => {
+          alert("❌ 提交失敗，請稍後再試");
+        });
     });
 
     restartBtn.addEventListener("click", () => {

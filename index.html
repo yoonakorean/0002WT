@@ -43,15 +43,12 @@
       cursor: pointer;
       text-align: center;
     }
-    /* 讓所有主要按鈕一致大小 */
     #check-btn, #next-btn, #submit-btn, #restart-btn, #mode-reselect-btn {
       width: 150px;
       padding: 12px 20px;
       font-size: 16px;
     }
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
     #answer, #nickname {
       padding: 8px;
       font-size: 16px;
@@ -69,13 +66,8 @@
       margin-left: auto;
       margin-right: auto;
     }
-    .note {
-      font-size: 14px;
-      color: #888;
-      margin: 2px 0;
-    }
-    #completion-note-practice,
-    #completion-note-challenge {
+    .note { font-size: 14px; color: #888; margin: 2px 0; }
+    #completion-note-practice, #completion-note-challenge {
       margin-top: 10px;
       font-size: 16px;
       color: #555;
@@ -85,7 +77,6 @@
 <body>
 
 <script>
-  // 密碼保護
   var password = prompt("請輸入密碼才能進入此網站：");
   if (password !== "1231") {
     alert("密碼錯誤，無法進入！");
@@ -93,7 +84,6 @@
   }
 </script>
 
-<!-- 選擇模式區 -->
 <div id="mode-select">
   <img id="logo" src="logo.png" alt="Logo" />
   <h2>請選擇模式</h2>
@@ -102,7 +92,6 @@
   <p style="font-size:14px; color:#555; margin-top:10px;">兩種模式皆可重複練習～</p>
 </div>
 
-<!-- 測驗區 -->
 <div id="game-area" class="hidden">
   <img id="logo-game" src="logo.png" alt="Logo" style="width: 150px; max-width: 80%; margin-bottom: 10px; margin-left:auto; margin-right:auto; display:block;" />
   <div id="game-title">0-2 單字聽打測驗</div>
@@ -115,7 +104,6 @@
   <button id="next-btn" class="hidden">下一題</button>
 </div>
 
-<!-- 完成區 -->
 <div id="nickname-section" class="hidden" style="margin-top: 20px;">
   <div id="completion-title" style="font-size:20px; margin-bottom:10px; color:#333;"></div>
   <input type="text" id="nickname" placeholder="請輸入姓名＋生日( 範例：王小明0828 )" />
@@ -146,7 +134,6 @@
     { audio: "000216W.mp3", answer: "혀", chinese: "舌頭" }
   ];
 
-  // DOM 元素
   const modeSelectDiv = document.getElementById("mode-select");
   const modePracticeBtn = document.getElementById("mode-practice-btn");
   const modeChallengeBtn = document.getElementById("mode-challenge-btn");
@@ -170,7 +157,6 @@
   const completionNotePractice = document.getElementById("completion-note-practice");
   const completionNoteChallenge = document.getElementById("completion-note-challenge");
 
-  // 遊戲變數
   let shuffledQuestions = [];
   let current = 0;
   let correct = 0;
@@ -221,8 +207,6 @@
     correct = 0;
     finalScore = 0;
     submitBtn.disabled = true;
-    questionNumberDiv.textContent = "";
-    timerDiv.textContent = "";
     answerInput.value = "";
     answerInput.disabled = false;
     checkBtn.disabled = true;
@@ -241,10 +225,17 @@
     const q = shuffledQuestions[current];
     audioEl.src = q.audio;
     questionNumberDiv.textContent = `第 ${current + 1} 題 / 共 ${shuffledQuestions.length} 題`;
+
+    audioEl.style.display = "block";
+    answerInput.style.display = "block";
+    checkBtn.style.display = "block";
+    nextBtn.style.display = "none";
+    questionNumberDiv.style.display = "block";
+    resultDiv.style.display = "block";
+
     answerInput.value = "";
     answerInput.disabled = false;
     checkBtn.disabled = true;
-    nextBtn.classList.add("hidden");
     resultDiv.innerHTML = "";
   }
 
@@ -300,8 +291,8 @@
 
     answerInput.disabled = true;
     checkBtn.disabled = true;
-    nextBtn.classList.remove("hidden"); // 按確認後馬上顯示
-    resultDiv.style.display = "block";
+    nextBtn.classList.remove("hidden"); // 顯示下一題
+    resultDiv.style.display = "block";   // 顯示答案
   });
 
   nextBtn.addEventListener("click", () => {

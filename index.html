@@ -39,15 +39,15 @@
     }
     button {
       margin: 10px auto;
-      padding: 12px 20px;
-      font-size: 16px;
       display: block;
-      width: 150px;
       cursor: pointer;
       text-align: center;
     }
+    /* 讓所有主要按鈕一致大小 */
     #check-btn, #next-btn, #submit-btn, #restart-btn, #mode-reselect-btn {
       width: 150px;
+      padding: 12px 20px;
+      font-size: 16px;
     }
     .hidden {
       display: none;
@@ -74,11 +74,7 @@
       color: #888;
       margin: 2px 0;
     }
-    #completion-note-practice {
-      margin-top: 10px;
-      font-size: 16px;
-      color: #555;
-    }
+    #completion-note-practice,
     #completion-note-challenge {
       margin-top: 10px;
       font-size: 16px;
@@ -156,7 +152,6 @@
   const modeChallengeBtn = document.getElementById("mode-challenge-btn");
 
   const gameAreaDiv = document.getElementById("game-area");
-  const logoGame = document.getElementById("logo-game");
   const gameTitle = document.getElementById("game-title");
   const questionNumberDiv = document.getElementById("question-number");
   const timerDiv = document.getElementById("timer");
@@ -184,10 +179,8 @@
   let timer = null;
   let timeLeft = 0;
   let timerStarted = false;
+  let currentMode = null;
 
-  let currentMode = null; // practice or challenge
-
-  // 工具：洗牌
   function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -196,33 +189,21 @@
     return array;
   }
 
-  // 顯示選擇模式畫面
   function showModeSelect() {
     modeSelectDiv.style.display = "block";
     gameAreaDiv.classList.add("hidden");
     nicknameSection.classList.add("hidden");
-
     resetGameVars();
   }
 
-  // 顯示測驗畫面
   function showGameArea() {
     modeSelectDiv.style.display = "none";
     gameAreaDiv.classList.remove("hidden");
     nicknameSection.classList.add("hidden");
 
-    logoGame.style.display = "block";
-    questionNumberDiv.style.display = "block";
     timerDiv.style.display = currentMode === "challenge" ? "block" : "none";
-    audioEl.style.display = "block";
-    answerInput.style.display = "block";
-    checkBtn.style.display = "block";
-    nextBtn.style.display = "none";
-    resultDiv.style.display = "block";
-
     submitBtn.disabled = true;
 
-    // 如果是挑戰模式，一開始顯示倒數秒數
     if (currentMode === "challenge") {
       timeLeft = shuffledQuestions.length * 10;
       timerDiv.textContent = `剩餘時間：${timeLeft} 秒`;
@@ -231,7 +212,6 @@
     }
   }
 
-  // 初始化變數
   function resetGameVars() {
     clearInterval(timer);
     timer = null;
@@ -241,7 +221,6 @@
     correct = 0;
     finalScore = 0;
     submitBtn.disabled = true;
-
     questionNumberDiv.textContent = "";
     timerDiv.textContent = "";
     answerInput.value = "";
@@ -251,7 +230,6 @@
     resultDiv.innerHTML = "";
   }
 
-  // 載入題目
   function loadQuestion() {
     if (shuffledQuestions.length === 0) {
       shuffledQuestions = shuffle([...questions]);
@@ -270,17 +248,10 @@
     resultDiv.innerHTML = "";
   }
 
-  // 開始計時器（挑戰模式）
   function startTimer() {
     if (timerStarted || currentMode === "practice") return;
     timerStarted = true;
-
-    if (timeLeft <= 0) {
-      timeLeft = shuffledQuestions.length * 10;
-    }
-
-    timerDiv.textContent = `剩餘時間：${timeLeft} 秒`;
-
+    if (timeLeft <= 0) timeLeft = shuffledQuestions.length * 10;
     timer = setInterval(() => {
       timeLeft--;
       timerDiv.textContent = `剩餘時間：${timeLeft} 秒`;
@@ -291,7 +262,6 @@
     }, 1000);
   }
 
-  // 監聽模式選擇按鈕
   modePracticeBtn.addEventListener("click", () => {
     currentMode = "practice";
     shuffledQuestions = shuffle([...questions]);
@@ -308,18 +278,6 @@
     loadQuestion();
   });
 
-  // 監聽音檔播放，啟動計時
-  let audioPlayListenerAdded = false;
-  function addAudioPlayListener() {
-    if (audioPlayListenerAdded) return;
-    audioPlayListenerAdded = true;
-    audioEl.addEventListener("play", () => {
-      startTimer();
-    });
-  }
-  addAudioPlayListener();
-
-  // 監聽輸入框輸入，啟動計時並控制確認按鈕可用性
   answerInput.addEventListener("input", () => {
     checkBtn.disabled = answerInput.value.trim() === "";
     if (currentMode === "challenge" && !timerStarted && answerInput.value.trim() !== "") {
@@ -327,12 +285,8 @@
     }
   });
 
-  // 按確認判斷答案並顯示結果
   checkBtn.addEventListener("click", () => {
-    if (currentMode === "challenge" && !timerStarted) {
-      startTimer();
-    }
-
+    if (currentMode === "challenge" && !timerStarted) startTimer();
     const userAns = answerInput.value.trim();
     const q = shuffledQuestions[current];
     const correctAns = q.answer.trim();
@@ -346,11 +300,10 @@
 
     answerInput.disabled = true;
     checkBtn.disabled = true;
-    nextBtn.classList.remove("hidden");
+    nextBtn.classList.remove("hidden"); // 按確認後馬上顯示
     resultDiv.style.display = "block";
   });
 
-  // 下一題按鈕
   nextBtn.addEventListener("click", () => {
     current++;
     if (current < shuffledQuestions.length) {
@@ -360,23 +313,14 @@
     }
   });
 
-  // 結束測驗
   function endGame() {
     clearInterval(timer);
     timerStarted = false;
-
     finalScore = Math.round((correct / shuffledQuestions.length) * 100);
     const passStatus = finalScore >= 80 ? "✅ 合格 可重新測驗" : "❌ 不合格 請重新測驗";
-
-    finalScoreDivText = `你答對 ${correct}/${shuffledQuestions.length} 題，得分 ${finalScore}% - ${passStatus}`;
-
-    // 顯示成績
-    completionTitle.textContent = finalScoreDivText;
-
-    // 顯示完成區塊
+    completionTitle.textContent = `你答對 ${correct}/${shuffledQuestions.length} 題，得分 ${finalScore}% - ${passStatus}`;
     nicknameSection.classList.remove("hidden");
 
-    // 根據模式調整顯示內容
     if (currentMode === "practice") {
       completionNotePractice.textContent = "可重複練習\n最後記得到挑戰模式回傳合格成績歐！！";
       completionNotePractice.style.whiteSpace = "pre-line";
@@ -387,14 +331,12 @@
     } else {
       completionNotePractice.classList.add("hidden");
       completionNoteChallenge.textContent = "請回傳合格成績歐！！";
-      completionNoteChallenge.style.whiteSpace = "pre-line";
       completionNoteChallenge.classList.remove("hidden");
       nicknameInput.style.display = "block";
       submitBtn.style.display = "inline-block";
       submitBtn.disabled = finalScore < 80;
     }
 
-    // 隱藏遊戲區域元素
     audioEl.style.display = "none";
     answerInput.style.display = "none";
     checkBtn.style.display = "none";
@@ -404,38 +346,26 @@
     resultDiv.style.display = "none";
   }
 
-  // 提交成績
   submitBtn.addEventListener("click", () => {
     const nickname = nicknameInput.value.trim();
     if (!nickname || finalScore < 80) return;
-
     const now = new Date();
-    const time = now.getFullYear() + "-" +
-      String(now.getMonth() + 1).padStart(2, '0') + "-" +
-      String(now.getDate()).padStart(2, '0') + " " +
-      String(now.getHours()).padStart(2, '0') + ":" +
-      String(now.getMinutes()).padStart(2, '0') + ":" +
-      String(now.getSeconds()).padStart(2, '0');
-
+    const time = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
     const weekdayNames = ["日", "一", "二", "三", "四", "五", "六"];
     const weekday = weekdayNames[now.getDay()];
     const gameTitleText = gameTitle.textContent;
-
-    // Google 表單送出
     const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSd8KhDu_lq6g4aPzkLaNYUUVG9P0E9cRT1R2WVDIkkfFh7WxA/formResponse";
     const formData = new FormData();
-    formData.append("entry.1082970818", nickname);   // 暱稱
-    formData.append("entry.851626887", finalScore);  // 分數
-    formData.append("entry.498226528", time);        // 測驗時間
-    formData.append("entry.532888754", weekday);     // 星期
-    formData.append("entry.1110600272", gameTitleText);  // 題目名稱
-
+    formData.append("entry.1082970818", nickname);
+    formData.append("entry.851626887", finalScore);
+    formData.append("entry.498226528", time);
+    formData.append("entry.532888754", weekday);
+    formData.append("entry.1110600272", gameTitleText);
     fetch(formURL, { method: "POST", body: formData, mode: "no-cors" })
       .then(() => alert("成績已送出，謝謝！"))
       .catch(() => alert("無法送出成績，請稍後再試。"));
   });
 
-  // 重新開始按鈕
   restartBtn.addEventListener("click", () => {
     resetGameVars();
     shuffledQuestions = shuffle([...questions]);
@@ -443,16 +373,13 @@
     loadQuestion();
   });
 
-  // 重新選擇模式按鈕
   modeReselectBtn.addEventListener("click", () => {
     currentMode = null;
     resetGameVars();
     showModeSelect();
   });
 
-  // 初始化 - 顯示選擇模式
   showModeSelect();
 </script>
-
 </body>
 </html>

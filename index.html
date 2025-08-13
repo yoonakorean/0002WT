@@ -30,7 +30,7 @@
       font-size: 18px;
     }
     #mode-select button {
-      min-width: 200px; /* 自動擴寬至少200px */
+      min-width: 200px;
       padding: 8px 20px;
       font-size: 16px;
       cursor: pointer;
@@ -104,6 +104,14 @@
       margin-bottom: 10px;
       color: #333;
     }
+    #practice-note {
+      font-size: 16px;
+      color: #333;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      white-space: pre-line; /* 讓換行有效 */
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -118,13 +126,12 @@
 
 <!-- 模式選擇 -->
 <div id="mode-select">
+  <img id="logo" src="logo.png" alt="Logo" />
   <h2>請選擇模式</h2>
   <button id="practice-btn">練習模式（無時間限制）</button>
   <button id="challenge-btn">挑戰模式（限時）</button>
   <p style="font-size:14px; color:#555; margin-top:10px;">兩種模式皆可重複練習～</p>
 </div>
-
-<img id="logo" src="logo.png" alt="Logo" />
 
 <div id="game-area" class="hidden">
   <div id="game-title">0-2 單字聽打測驗</div>
@@ -142,9 +149,12 @@
   <div id="nickname-section" class="hidden">
     <div id="completion-title">測驗完成</div>
     <input type="text" id="nickname" placeholder="請輸入姓名＋生日( 範例：王小明0828 )" />
-    <div class="note">&nbsp;</div>
-    <div class="note">姓名＋生日 範例：王小明0828</div>
-    <div class="note">請回傳合格成績</div>
+    <div class="note" id="nickname-example">姓名＋生日 範例：王小明0828</div>
+    <div class="note" id="nickname-note">請回傳合格成績</div>
+    <div id="practice-note">
+      可重複練習<br>
+      最後記得到挑戰模式回傳合格成績歐！！
+    </div>
     <button id="submit-btn" disabled>提交成績</button>
     <button id="restart-btn">重新開始</button>
     <button id="change-mode-btn">重新選擇模式</button>
@@ -209,6 +219,10 @@
   const changeModeBtn = document.getElementById("change-mode-btn");
   const timerDiv = document.getElementById("timer");
 
+  const nicknameExample = document.getElementById("nickname-example");
+  const nicknameNote = document.getElementById("nickname-note");
+  const practiceNote = document.getElementById("practice-note");
+
   practiceBtn.addEventListener("click", () => startGame("practice"));
   challengeBtn.addEventListener("click", () => startGame("challenge"));
 
@@ -216,8 +230,8 @@
     currentMode = mode;
     modeSelectDiv.classList.add("hidden");
     gameArea.classList.remove("hidden");
-    resetGame();
     shuffledQuestions = shuffle([...questions]);
+    resetGame();
     loadQuestion();
     if (currentMode === "challenge") {
       timeLeft = shuffledQuestions.length * 10;
@@ -254,6 +268,12 @@
     } else {
       timerDiv.textContent = "";
     }
+
+    // 確保隱藏練習模式特有訊息與輸入欄
+    practiceNote.style.display = "none";
+    nicknameInput.style.display = "block";
+    nicknameExample.style.display = "block";
+    nicknameNote.style.display = "block";
   }
 
   function loadQuestion() {
@@ -340,6 +360,21 @@
     questionNumber.style.display = "none";
     resultDiv.style.display = "none";
     timerDiv.style.display = "none";
+
+    // 練習模式特殊訊息與輸入欄處理
+    if (currentMode === "practice") {
+      nicknameInput.style.display = "none";
+      nicknameExample.style.display = "none";
+      nicknameNote.style.display = "none";
+
+      practiceNote.style.display = "block";
+      practiceNote.style.textAlign = "center";
+    } else {
+      practiceNote.style.display = "none";
+      nicknameInput.style.display = "block";
+      nicknameExample.style.display = "block";
+      nicknameNote.style.display = "block";
+    }
   }
 
   nicknameInput.addEventListener("input", () => {
@@ -381,6 +416,9 @@
     resetGame();
     shuffledQuestions = shuffle([...questions]);
     loadQuestion();
+    // 按重新開始也要顯示題目區塊及時間
+    gameArea.classList.remove("hidden");
+    timerDiv.style.display = "block";
   });
 
   changeModeBtn.addEventListener("click", () => {

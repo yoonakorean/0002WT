@@ -84,15 +84,26 @@
   </style>
 </head>
 <body>
+
+    <script>
+    // 密碼保護（若不需要可移除）
+    var password = prompt("請輸入密碼才能進入此網站：");
+    if (password !== "1231") {
+      alert("密碼錯誤，無法進入！");
+      window.location.href = "https://www.google.com";
+    }
+  </script>
+
+  <!-- 模式選擇 -->
+  <div id="mode-select">
+    <h2>請選擇模式</h2>
+    <button onclick="startGame('practice')">練習模式（無時間限制）</button>
+    <button onclick="startGame('test')">挑戰模式（限時）</button>
+    <p style="font-size:14px; color:#555; margin-top:10px;">兩種模式皆可重複練習～</p>
+  </div>
+  
   <img id="logo" src="logo.png" alt="Logo">
   <div id="game-title">0-2 單字聽打</div>
-
-  <div id="mode-selection">
-    <span>選擇模式：</span>
-    <button id="mode-practice" class="selected">練習模式</button>
-    <button id="mode-challenge">挑戰模式</button>
-  </div>
-
   <div id="question-number" class="hidden">第 1 題 / 共 16 題</div>
   <div id="timer" class="hidden">剩餘時間：-- 秒</div>
   <audio id="audio" controls class="hidden"></audio><br>

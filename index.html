@@ -22,6 +22,21 @@
       font-weight: bold;
       margin-bottom: 10px;
     }
+    #mode-selection {
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    #mode-selection button {
+      margin: 0 10px;
+      padding: 8px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #mode-selection button.selected {
+      background-color: #0077cc;
+      color: white;
+      font-weight: bold;
+    }
     #question-number {
       font-size: 18px;
       margin-bottom: 10px;
@@ -36,6 +51,7 @@
       padding: 10px 20px;
       font-size: 16px;
       display: block;
+      cursor: pointer;
     }
     #check-btn, #next-btn, #submit-btn, #restart-btn {
       width: 150px;
@@ -70,13 +86,20 @@
 <body>
   <img id="logo" src="logo.png" alt="Logo">
   <div id="game-title">0-2 單字聽打</div>
-  <div id="question-number">第 1 題 / 共 16 題</div>
-  <div id="timer">剩餘時間：-- 秒</div>
-  <audio id="audio" controls></audio><br>
-  <input type="text" id="answer" placeholder="請輸入聽到的內容"><br>
+
+  <div id="mode-selection">
+    <span>選擇模式：</span>
+    <button id="mode-practice" class="selected">練習模式</button>
+    <button id="mode-challenge">挑戰模式</button>
+  </div>
+
+  <div id="question-number" class="hidden">第 1 題 / 共 16 題</div>
+  <div id="timer" class="hidden">剩餘時間：-- 秒</div>
+  <audio id="audio" controls class="hidden"></audio><br>
+  <input type="text" id="answer" placeholder="請輸入聽到的內容" class="hidden"><br>
   <div class="note">&nbsp;</div>
   <div class="note">&nbsp;</div>
-  <button id="check-btn" disabled>確認</button>
+  <button id="check-btn" disabled class="hidden">確認</button>
   <div id="result"></div>
   <button id="next-btn" class="hidden">下一題</button>
 
@@ -121,13 +144,14 @@
       return array;
     }
 
-    let shuffledQuestions = shuffle([...questions]);
+    let shuffledQuestions = [];
     let current = 0;
     let correct = 0;
     let finalScore = 0;
 
-    let timer; 
-    let timeLeft;
+    let timer = null;
+    let timeLeft = 0;
+    let timerStarted = false;
 
     const audio = document.getElementById("audio");
     const answerInput = document.getElementById("answer");
@@ -142,22 +166,74 @@
     const restartBtn = document.getElementById("restart-btn");
     const timerDiv = document.getElementById("timer");
 
-    answerInput.addEventListener("input", () => {
-      checkBtn.disabled = answerInput.value.trim() === "";
+    const modePracticeBtn = document.getElementById("mode-practice");
+    const modeChallengeBtn = document.getElementById("mode-challenge");
+    let currentMode = "practice"; // 預設練習模式
+
+    // 切換模式按鈕事件
+    modePracticeBtn.addEventListener("click", () => {
+      if (currentMode === "practice") return;
+      currentMode = "practice";
+      modePracticeBtn.classList.add("selected");
+      modeChallengeBtn.classList.remove("selected");
+      resetGame();
+      showStartUI();
+    });
+    modeChallengeBtn.addEventListener("click", () => {
+      if (currentMode === "challenge") return;
+      currentMode = "challenge";
+      modeChallengeBtn.classList.add("selected");
+      modePracticeBtn.classList.remove("selected");
+      resetGame();
+      showStartUI();
     });
 
-    function loadQuestion() {
-      const q = shuffledQuestions[current];
-      audio.src = q.audio;
-      answerInput.value = "";
+    function resetGame() {
+      clearInterval(timer);
+      timer = null;
+      timerStarted = false;
+      timeLeft = 0;
+      current = 0;
+      correct = 0;
+      finalScore = 0;
+      finalScoreDiv.innerHTML = "";
+      nicknameSection.classList.add("hidden");
+      nicknameInput.value = "";
+      submitBtn.disabled = true;
       resultDiv.innerHTML = "";
-      answerInput.disabled = false;
-      checkBtn.disabled = true;
-      nextBtn.classList.add("hidden");
-      questionNumber.textContent = `第 ${current + 1} 題 / 共 ${shuffledQuestions.length} 題`;
     }
 
+    function showStartUI() {
+      // 按模式顯示或隱藏題目區、計時器、按鈕
+      if (currentMode === "practice") {
+        // 練習模式： 顯示題目區，不顯示計時器
+        questionNumber.classList.remove("hidden");
+        audio.classList.remove("hidden");
+        answerInput.classList.remove("hidden");
+        checkBtn.classList.remove("hidden");
+        nextBtn.classList.add("hidden");
+        timerDiv.classList.add("hidden");
+        finalScoreDiv.innerHTML = "";
+        resultDiv.innerHTML = "";
+        loadQuestion();
+      } else {
+        // 挑戰模式： 顯示題目區和計時器，倒數需等待觸發
+        questionNumber.classList.remove("hidden");
+        audio.classList.remove("hidden");
+        answerInput.classList.remove("hidden");
+        checkBtn.classList.remove("hidden");
+        nextBtn.classList.add("hidden");
+        timerDiv.classList.remove("hidden");
+        finalScoreDiv.innerHTML = "";
+        resultDiv.innerHTML = "";
+        loadQuestion();
+      }
+    }
+
+    // 啟動倒數（只會執行一次）
     function startTimer() {
+      if (timerStarted || currentMode === "practice") return; // 練習模式不計時
+      timerStarted = true;
       timeLeft = shuffledQuestions.length * 10;
       timerDiv.textContent = `剩餘時間：${timeLeft} 秒`;
 
@@ -171,7 +247,32 @@
       }, 1000);
     }
 
+    // 監聽 audio 播放按鈕 - 只要第一次播放就啟動計時器
+    let audioPlayListenerAdded = false;
+    function addAudioPlayListener() {
+      if (audioPlayListenerAdded) return;
+      audioPlayListenerAdded = true;
+      audio.addEventListener("play", () => {
+        startTimer();
+      });
+    }
+
+    // 監聽 answerInput 第一次輸入即啟動倒數（挑戰模式）
+    let answerInputFirstFocus = false;
+    answerInput.addEventListener("input", () => {
+      checkBtn.disabled = answerInput.value.trim() === "";
+
+      if (currentMode === "challenge" && !timerStarted && answerInput.value.trim() !== "") {
+        startTimer();
+      }
+    });
+
+    // 按確認時啟動倒數（避免有人輸入後不按確認）
     checkBtn.addEventListener("click", () => {
+      if (currentMode === "challenge" && !timerStarted) {
+        startTimer();
+      }
+
       const userAns = answerInput.value.trim();
       const q = shuffledQuestions[current];
       const correctAns = q.answer.trim();
@@ -197,10 +298,28 @@
       }
     });
 
+    function loadQuestion() {
+      if (shuffledQuestions.length === 0) {
+        shuffledQuestions = shuffle([...questions]);
+      }
+      const q = shuffledQuestions[current];
+      audio.src = q.audio;
+      answerInput.value = "";
+      resultDiv.innerHTML = "";
+      answerInput.disabled = false;
+      checkBtn.disabled = true;
+      nextBtn.classList.add("hidden");
+      questionNumber.textContent = `第 ${current + 1} 題 / 共 ${shuffledQuestions.length} 題`;
+      // 確保音訊監聽加上（只呼叫一次）
+      addAudioPlayListener();
+    }
+
     function endGame() {
       clearInterval(timer);
+      timerStarted = false;
+
       finalScore = Math.round((correct / shuffledQuestions.length) * 100);
-      const passStatus = finalScore >= 80 ? "✅ 合格" : "❌ 不合格 請重新測驗";
+      const passStatus = finalScore >= 80 ? "✅ 合格 可重新測驗" : "❌ 不合格 請重新測驗";
       finalScoreDiv.innerHTML = `<h2>你答對 ${correct}/${shuffledQuestions.length} 題，得分 ${finalScore}% - ${passStatus}</h2>`;
       nicknameSection.classList.remove("hidden");
 
@@ -256,12 +375,17 @@
     });
 
     restartBtn.addEventListener("click", () => {
+      resetGame();
       shuffledQuestions = shuffle([...questions]);
       current = 0;
       correct = 0;
       finalScore = 0;
       loadQuestion();
-      startTimer();
+      if(currentMode === "practice") {
+        timerDiv.classList.add("hidden");
+      } else {
+        timerDiv.classList.remove("hidden");
+      }
 
       finalScoreDiv.innerHTML = "";
       nicknameSection.classList.add("hidden");
@@ -272,11 +396,13 @@
       audio.style.display = "block";
       questionNumber.style.display = "block";
       resultDiv.style.display = "block";
-      timerDiv.style.display = "block";
+      timerDiv.style.display = currentMode === "challenge" ? "block" : "none";
     });
 
-    loadQuestion();
-    startTimer();
+    // 初始化
+    resetGame();
+    shuffledQuestions = shuffle([...questions]);
+    showStartUI();
   </script>
 </body>
 </html>

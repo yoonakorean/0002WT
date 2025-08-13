@@ -102,6 +102,8 @@ let timer = null;
 let timeLeft = 0;
 let timerStarted = false;
 let currentMode = null;
+let startTime = null; // 新增開始時間
+let elapsedSeconds = 0; // 花費時間
 
 function shuffle(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]];}return array;}
 
@@ -118,6 +120,10 @@ gameAreaDiv.classList.remove("hidden");
 nicknameSection.classList.add("hidden");
 timerDiv.style.display=currentMode==="challenge"?"block":"none";
 submitBtn.disabled=true;
+
+// 記錄開始時間
+startTime = Date.now();
+
 if(currentMode==="challenge"){timeLeft=shuffledQuestions.length*10;timerDiv.textContent=`剩餘時間：${timeLeft} 秒`;}
 else{timerDiv.textContent="";}
 }
@@ -125,6 +131,7 @@ else{timerDiv.textContent="";}
 function resetGameVars(){
 clearInterval(timer); timer=null; timerStarted=false; timeLeft=0;
 current=0; correct=0; finalScore=0;
+elapsedSeconds = 0;
 submitBtn.disabled=true; answerInput.value=""; answerInput.disabled=false;
 checkBtn.disabled=true; nextBtn.style.display="none"; resultDiv.innerHTML="";
 questionNumberDiv.textContent=""; timerDiv.textContent="";
@@ -159,13 +166,17 @@ const q=shuffledQuestions[current];
 const correctAns=q.answer.trim();
 if(userAns===correctAns){resultDiv.innerHTML=`✅ 答對了🎉 你真棒👍🏻<br>📘 中文：<strong>${q.chinese}</strong>`; correct++;}
 else{resultDiv.innerHTML=`❌ 錯誤。正確答案是：<strong>${correctAns}</strong><br>📘 中文：<strong>${q.chinese}</strong>`;}
-answerInput.disabled=true; checkBtn.disabled=true; nextBtn.style.display="block"; resultDiv.style.display="block"; // <- 確保下一題出現
+answerInput.disabled=true; checkBtn.disabled=true; nextBtn.style.display="block"; resultDiv.style.display="block";
 });
 
 nextBtn.addEventListener("click",()=>{current++; if(current<shuffledQuestions.length){loadQuestion();} else {endGame();}});
 
 function endGame(){
 clearInterval(timer); timerStarted=false; finalScore=Math.round((correct/shuffledQuestions.length)*100);
+
+// 計算花費時間
+elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+
 const passStatus=finalScore>=80?"✅ 合格 可重新測驗":"❌ 不合格 請重新測驗";
 completionTitle.textContent=`你答對 ${correct}/${shuffledQuestions.length} 題，得分 ${finalScore}% - ${passStatus}`;
 nicknameSection.classList.remove("hidden");
@@ -175,7 +186,8 @@ completionNotePractice.style.whiteSpace="pre-line"; completionNotePractice.class
 completionNoteChallenge.classList.add("hidden"); nicknameInput.style.display="none"; submitBtn.style.display="none";
 } else {
 completionNotePractice.classList.add("hidden");
-completionNoteChallenge.textContent="請回傳合格成績歐！！"; completionNoteChallenge.classList.remove("hidden");
+completionNoteChallenge.textContent=`請回傳合格成績歐！！（花費時間：${elapsedSeconds} 秒）`; 
+completionNoteChallenge.classList.remove("hidden");
 nicknameInput.style.display="block"; submitBtn.style.display="inline-block"; submitBtn.disabled=finalScore<80;
 }
 audioEl.style.display="none"; answerInput.style.display="none"; checkBtn.style.display="none"; nextBtn.style.display="none";
@@ -185,17 +197,12 @@ questionNumberDiv.style.display="none"; timerDiv.style.display="none"; resultDiv
 submitBtn.addEventListener("click",()=>{
 const nickname=nicknameInput.value.trim();
 if(!nickname||finalScore<80)return;
-const now=new Date();
-const time=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-const weekdayNames=["日","一","二","三","四","五","六"];
-const weekday=weekdayNames[now.getDay()];
 const gameTitleText=gameTitle.textContent;
 const formURL="https://docs.google.com/forms/d/e/1FAIpQLSd8KhDu_lq6g4aPzkLaNYUUVG9P0E9cRT1R2WVDIkkfFh7WxA/formResponse";
 const formData=new FormData();
 formData.append("entry.1082970818",nickname);
 formData.append("entry.851626887",finalScore);
-formData.append("entry.498226528",time);
-formData.append("entry.532888754",weekday);
+formData.append("entry.498226528",`${elapsedSeconds} 秒`); // 改成花費時間
 formData.append("entry.1110600272",gameTitleText);
 fetch(formURL,{method:"POST",body:formData,mode:"no-cors"}).then(()=>alert("成績已送出，謝謝！")).catch(()=>alert("無法送出成績，請稍後再試。"));
 });

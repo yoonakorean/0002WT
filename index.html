@@ -109,7 +109,7 @@
       color: #333;
       margin-top: 10px;
       margin-bottom: 20px;
-      white-space: pre-line; /* 讓換行有效 */
+      white-space: pre-line;
       display: none;
     }
   </style>
@@ -134,6 +134,7 @@
 </div>
 
 <div id="game-area" class="hidden">
+  <img id="logo-game" src="logo.png" alt="Logo" style="width:150px; max-width:80%; margin: 0 auto 10px auto; display: block;">
   <div id="game-title">0-2 單字聽打測驗</div>
   <div id="question-number">第 1 題 / 共 16 題</div>
   <div id="timer">剩餘時間：-- 秒</div>
@@ -269,7 +270,6 @@
       timerDiv.textContent = "";
     }
 
-    // 確保隱藏練習模式特有訊息與輸入欄
     practiceNote.style.display = "none";
     nicknameInput.style.display = "block";
     nicknameExample.style.display = "block";
@@ -361,7 +361,6 @@
     resultDiv.style.display = "none";
     timerDiv.style.display = "none";
 
-    // 練習模式特殊訊息與輸入欄處理
     if (currentMode === "practice") {
       nicknameInput.style.display = "none";
       nicknameExample.style.display = "none";
@@ -416,7 +415,6 @@
     resetGame();
     shuffledQuestions = shuffle([...questions]);
     loadQuestion();
-    // 按重新開始也要顯示題目區塊及時間
     gameArea.classList.remove("hidden");
     timerDiv.style.display = "block";
   });
